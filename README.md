@@ -14,8 +14,15 @@ The character-set is different in ScrollLedMatrix because I redrew them to my li
 - ScrollLedMatrix  
 - wire_diagram.ods
 
+WIRING PROBLEMS: I originally had some weird issues with the wiring. After providing a dedicated path to ground for pin 4 and 9 (as opposed to sharing the same wire), everything went back to normal... Eventhough this makes absolutely no sense to me, it will hopefully help some of you getting your matrix working. 
+
+
 TODO:
+
 -add uppercase characters
+
 -add numbers and symbols
+
 -control scroll speed
+
 -control intensity
