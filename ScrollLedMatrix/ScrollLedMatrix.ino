@@ -1,5 +1,5 @@
 /*
-Remy Younes
+Remy Younes - ryounes@gmail.com
 Scrollable text on 8x8 LCD Matrix
 */
 
@@ -13,15 +13,24 @@ Scrollable text on 8x8 LCD Matrix
  pin 10 is connected to LOAD 
  */
  
+//=======================
+// INIT
+//=======================
 LedControl lc=LedControl(12,11,10,1);
-
 /* Scroll Delay */
 unsigned long delaytime = 80;
 //number of rows needed to represent a spacer on matrix 
 unsigned static int const SPACING = 1;
 //number of rows needed to represent a char on matrix  (5x8)
 unsigned static int const CLEN = 5;
+//LCD WIDTH ( 8x8 )
 unsigned static int const LCD_WIDTH = 8;
+//size of current
+unsigned static int bannerSize = 0;
+
+//=======================
+// CHARS
+//=======================
 // 5 ROWs wide text for letters A through Z
 static byte CHARACTERS[][CLEN] = {
   { B00000010,B00010101,B00010101,B00010101,B00011111  }, //a (0)
@@ -65,7 +74,9 @@ static byte CHARACTERS[][CLEN] = {
   //ヨウコソ
 };
 
-
+//=======================
+// SETUP 
+//=======================
 void setup() {
    //The MAX72XX is in power-saving mode on startup - > Wakeup call
   lc.shutdown(0,false);
@@ -75,18 +86,72 @@ void setup() {
   lc.clearDisplay(0);
 }
 
-// Write a message on LedMatrix and Scroll it Right to left.
+//=======================
+// PRINT ON LED MATRIX & SCROLL (R to L).
+//=======================
 void writeOnMatrix(String message) {
 
   //add padding(optional): helps with scroll rotation
   message = "  " + message + "  ";
   
   //size of the banner
-  int aSize = message.length() * (CLEN + SPACING);
   byte* banner = constructBanner(message);
+  printBanner(banner);
+  //deallocate, once we're done printing
+  delete [] banner;
+}
+
+
+//=======================
+//HELPERS METHODS
+//=======================
+
+//construct a printable banner out of each message character
+byte* constructBanner(String s){
+  //calculate bannerSize for memory alloc and loop
+  bannerSize =  s.length() * (CLEN + SPACING);  
+  // banner is a side-by-side collection of the letters that spell out message
+  // m allocation for banner
+  byte* banner = new byte[bannerSize];
+  int index, offset;
+  char c;
   
-  //print banner
-  for( int i=0; i < aSize-(LCD_WIDTH); i++){
+  //insert letters in banner
+  for(int i=0; i<s.length(); i++){
+    offset = (CLEN + SPACING) * i;
+    c = tolower(s[i]);
+    
+    index = getCharIndex(c);
+   
+    // print each row of each char on banner
+    for(int j=0; j<CLEN; j++){
+      if(j<CLEN){
+        banner[offset+j] = CHARACTERS[index][j];
+      }
+    }
+    for(int k=0; k<SPACING; k++){
+      banner[offset+CLEN+k] = B00000000; 
+    }
+  }
+  
+  return banner;
+}
+
+//CONVERT CURRENT MESSAGE CHARACTER TO INDEX IN CHARACTER SET
+int getCharIndex(char c){
+  //index 26 represents a space (shown by default if unknown char)
+  int index = 26;
+  
+  //if char is a-z
+  if ( 'a' <= c && c <= 'z') {
+    index = c - 'a';
+  }
+  return index;
+}
+
+//ITERATE THROUGH BANNER AND PRINT EACH ROW
+void printBanner(byte* banner){
+  for( int i=0; i < bannerSize-(LCD_WIDTH); i++){
     //Update rows from i to i+j (8 rows)
     for(int j=0; j<LCD_WIDTH; j++){
       lc.setRow(0, j, banner[i+j]); 
@@ -94,46 +159,12 @@ void writeOnMatrix(String message) {
     //scroll delay
     delay(delaytime);
   }
-  //deallocate, once we're done printing
-  delete [] banner;
 }
 
- byte* constructBanner(String s){
-  int aSize =  s.length() * (CLEN + SPACING);  
-  // banner is a side-by-side collection of the letters that spell out message
-  // m allocation for banner
-  byte* banner= new byte[aSize];
-  int index, offset;
-  char l;
-  
-  //insert letters in banner
-  for( int i=0; i<s.length(); i++){
-    offset = ( CLEN + SPACING) * i;
-    l = tolower(s[i]);
-    
-    //if char is a-z, print on banner + SPACING
-    if ( 'a' <= l && l <= 'z') {
-      index = l - 'a';
-    }else{
-      //index 26 represents a space
-      //show a space if unknown char
-      index = 26;
-    }
-   
-    // print each row of each char on banner
-    for(int j=0; j<=CLEN; j++){
-      if(j<CLEN){
-        banner[offset+j] = CHARACTERS[index][j];
-      }else{
-        banner[offset+CLEN] = B00000000;
-      }
-    }
-  }
-  
-  return banner;
-}
-
-void loop() { 
+//=======================
+// MAIN LOOP
+//=======================
+void loop() {
   writeOnMatrix("sbhackerspace");
   writeOnMatrix("fishbon");
 }
