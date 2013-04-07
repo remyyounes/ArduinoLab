@@ -34,18 +34,19 @@ unsigned static int const CLEN = 5;
 unsigned static int const LCD_WIDTH = 8;
 //size of current
 unsigned static int bannerSize = 0;
-int CURRENT_MODE = 0;
+static int CURRENT_MODE = 0;
+static int const MODE_NUM = 4;
 
 static int const ACCELERATION_VERTICAL = 0;
 static int const ACCELERATION_HORIZONTAL = 1;
 static int const VELOCITY_VERTICAL = 2;
 static int const VELOCITY_HORIZONTAL = 3;
-static int[4] = {
+static int MODES[MODE_NUM] = {
   ACCELERATION_VERTICAL,
   ACCELERATION_HORIZONTAL,
   VELOCITY_VERTICAL,
   VELOCITY_HORIZONTAL
-}
+};
 
 //=======================
 // CHARS
@@ -191,9 +192,11 @@ void printBanner(byte* banner){
   }
 }
 
-void changeMethod(){
-  if(
-  attr++ 
+void changeMode(){
+  CURRENT_MODE++;
+  if(CURRENT_MODE>MODE_NUM){
+    CURRENT_MODE = 0;
+  }
 }
 
 //=======================
@@ -238,7 +241,7 @@ void loop() {
     if (lastButton == LOW && currentButton == HIGH ){
       changeMode();
     }  
-    Serial.println(v);
+    Serial.println(CURRENT_MODE);
     bouncedelay = sensorValue;
     delay(bouncedelay);
 //    Serial.println(y);
@@ -246,3 +249,5 @@ void loop() {
 //    Serial.println(ay);
   }
 }
+
+
