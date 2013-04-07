@@ -22,6 +22,13 @@ int btnPin = 6;
 boolean lastButton = LOW;
 boolean currentButton = LOW;
 
+//BALL ATTRS
+double  vx = 0.1,
+          vy = 0.0,
+          ax = 0,
+          ay = -0.1;
+
+
 LedControl lc=LedControl(12,11,10,1);
 /* Scroll Delay */
 unsigned long delaytime = 40;
@@ -35,17 +42,20 @@ unsigned static int const LCD_WIDTH = 8;
 //size of current
 unsigned static int bannerSize = 0;
 static int CURRENT_MODE = 0;
-static int const MODE_NUM = 4;
+static int const MODE_NUM = 3;
 
 static int const ACCELERATION_VERTICAL = 0;
-static int const ACCELERATION_HORIZONTAL = 1;
-static int const VELOCITY_VERTICAL = 2;
-static int const VELOCITY_HORIZONTAL = 3;
+// static int const ACCELERATION_HORIZONTAL = 1;
+// static int const VELOCITY_VERTICAL = 2;
+static int const VELOCITY_HORIZONTAL = 1;
+static int const DELAY = 2;
+
 static int MODES[MODE_NUM] = {
   ACCELERATION_VERTICAL,
-  ACCELERATION_HORIZONTAL,
-  VELOCITY_VERTICAL,
-  VELOCITY_HORIZONTAL
+  // ACCELERATION_HORIZONTAL,
+  // VELOCITY_VERTICAL,
+  VELOCITY_HORIZONTAL,
+  DELAY
 };
 
 //=======================
@@ -194,9 +204,26 @@ void printBanner(byte* banner){
 
 void changeMode(){
   CURRENT_MODE++;
-  if(CURRENT_MODE>MODE_NUM){
+  if(CURRENT_MODE>=MODE_NUM){
     CURRENT_MODE = 0;
   }
+}
+
+void adjust(int mode, double val ){
+  if(mode == ACCELERATION_VERTICAL){
+    ay = map(sensorValue, 0,1023, -500, 500) / 1000.00 ;
+    Serial.println(ay);
+  }else if(mode == VELOCITY_HORIZONTAL){
+    vx = map(sensorValue, 0,1023, -500, 500) / 500.00;
+    Serial.println(vx);
+  }else if(mode == DELAY){
+    bouncedelay = map(sensorValue, 0,1023, 10, 200);
+    Serial.println(bouncedelay);
+  }
+  // Serial.print(mode + " ");
+
+  // Serial.println(sensorValue);
+
 }
 
 //=======================
@@ -206,48 +233,85 @@ void loop() {
 //  writeOnMatrix("MakineBounce");
   double x = 0, 
       y = 6;
-  double  vx = 0.1,
-          vy = 0.0,
-          ax = 0,
-          ay = -0.1;
+  
       
   while(1){
+    //CLEAR PREVIOUS POSITION
     lc.setLed(0,floor(x),floor(y),false);
-    
-     
+ 
+    //MOTION
     if(x+vx>=LCD_WIDTH || x+vx < 0){
       vx*= -1;
     }
      
     if( y+vy>LCD_WIDTH || y+vy < 0){
-      vy*= -1;
-      y -= y*2;
+      if(y+vy > 0){
+        y=LCD_WIDTH;
+        vy*=-1;
+      }else{
+        vy*= -1;
+        y -= y*2;
+      }
+
     }
     
+    //UPDATE LOCATION AND VELOCITY
     x+=vx;
     y+=vy;    
     vx+=ax;
     vy+=ay;
+
+    //DISPLAY CURRENT POS
     lc.setLed(0,floor(x),floor(y),true);
-//    Serial.println("====");    
+
+    // Serial.print("Y: ");
+    // Serial.println(y);
+
+    //READ SENSOR/POTENTOMETER STATE
     sensorValue = analogRead(sensorPin);
-    sensorValue = map(sensorValue, 0,1023, 0, 300);
     
-    //btn
+    
+    //READ BUTTON STATE
     lastButton = currentButton;
     currentButton = debounce(lastButton) ;
     
-    //btn pushed
+    //CHANGE MODE WHEN BUTTON PRESSED
     if (lastButton == LOW && currentButton == HIGH ){
       changeMode();
-    }  
+    }
+
+    adjust(CURRENT_MODE, sensorValue);
+
     Serial.println(CURRENT_MODE);
-    bouncedelay = sensorValue;
+    
     delay(bouncedelay);
-//    Serial.println(y);
-//    Serial.println(vy);
-//    Serial.println(ay);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
