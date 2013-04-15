@@ -212,18 +212,18 @@ void changeMode(){
 void adjust(int mode, double val ){
   if(mode == ACCELERATION_VERTICAL){
     ay = map(sensorValue, 0,1023, -500, 500) / 1000.00 ;
-    Serial.println(ay);
+    // Serial.println(ay);
   }else if(mode == VELOCITY_HORIZONTAL){
     vx = map(sensorValue, 0,1023, -500, 500) / 500.00;
-    Serial.println(vx);
+    // Serial.println(vx);
   }else if(mode == DELAY){
     bouncedelay = map(sensorValue, 0,1023, 10, 200);
-    Serial.println(bouncedelay);
+    // Serial.println(bouncedelay);
   }
   // Serial.print(mode + " ");
 
   // Serial.println(sensorValue);
-
+  Serial.println(vy);
 }
 
 //=======================
@@ -281,12 +281,10 @@ void loop() {
     }
 
     adjust(CURRENT_MODE, sensorValue);
-
-    Serial.println(CURRENT_MODE);
-    
     delay(bouncedelay);
   }
 }
+
 
 
 
